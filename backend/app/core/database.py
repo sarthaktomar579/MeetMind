@@ -29,7 +29,6 @@ def init_db() -> None:
         meeting,
         participant,
         tag,
-        topic,
         transcript,
     )
 
