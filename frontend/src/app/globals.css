@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8f9fc;
+  --foreground: #1a1a2e;
+  --sidebar: #1e1033;
+  --sidebar-hover: #2d1b4e;
+  --brand: #7c3aed;
+  --brand-light: #a78bfa;
+  --brand-muted: #ede9fe;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+  --active-transcript: #f3e8ff;
+}
+
+.dark {
+  --background: #0f0f14;
+  --foreground: #f3f4f6;
+  --sidebar: #0a0612;
+  --sidebar-hover: #1a1030;
+  --brand: #8b5cf6;
+  --brand-light: #c4b5fd;
+  --brand-muted: #2e1065;
+  --card: #1a1a24;
+  --border: #2d2d3a;
+  --muted: #9ca3af;
+  --active-transcript: #2e1065;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+}
