@@ -1,13 +1,14 @@
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import ActionItem, Meeting, Participant, Tag, Topic, TranscriptSegment
+from app.models import ActionItem, Meeting, Participant, SegmentAnnotation, Tag, Topic, TranscriptSegment
 from app.schemas.meeting import (
     ActionItemCreate,
     ActionItemUpdate,
     GlobalSearchResult,
     MeetingCreate,
     MeetingUpdate,
+    SegmentAnnotationCreate,
     TranscriptSegmentCreate,
 )
 
@@ -42,6 +43,7 @@ class MeetingRepository:
         date_from: str | None = None,
         date_to: str | None = None,
         tag: str | None = None,
+        topic: str | None = None,
         sort: str = "recent",
     ) -> list[Meeting]:
         query = self.db.query(Meeting).options(
@@ -55,6 +57,8 @@ class MeetingRepository:
             query = query.join(Meeting.participants).filter(Participant.name.ilike(f"%{participant}%"))
         if tag:
             query = query.join(Meeting.tags).filter(Tag.name.ilike(f"%{tag}%"))
+        if topic:
+            query = query.join(Meeting.topics).filter(Topic.title.ilike(f"%{topic}%"))
         if date_from:
             query = query.filter(Meeting.meeting_date >= date_from)
         if date_to:
@@ -74,6 +78,7 @@ class MeetingRepository:
                 joinedload(Meeting.transcript_segments),
                 joinedload(Meeting.action_items),
                 joinedload(Meeting.topics),
+                joinedload(Meeting.annotations),
             )
             .filter(Meeting.id == meeting_id)
             .first()
@@ -207,3 +212,47 @@ class MeetingRepository:
 
     def list_tags(self) -> list[Tag]:
         return self.db.query(Tag).order_by(Tag.name).all()
+
+    def list_topics(self) -> list[str]:
+        rows = self.db.query(Topic.title).distinct().order_by(Topic.title).all()
+        return [row[0] for row in rows]
+
+    def create_annotation(
+        self, meeting_id: int, payload: SegmentAnnotationCreate
+    ) -> SegmentAnnotation | None:
+        segment = (
+            self.db.query(TranscriptSegment)
+            .filter(TranscriptSegment.id == payload.segment_id, TranscriptSegment.meeting_id == meeting_id)
+            .first()
+        )
+        if not segment:
+            return None
+        if payload.annotation_type == "highlight":
+            existing = (
+                self.db.query(SegmentAnnotation)
+                .filter(
+                    SegmentAnnotation.segment_id == payload.segment_id,
+                    SegmentAnnotation.annotation_type == "highlight",
+                )
+                .first()
+            )
+            if existing:
+                return existing
+        annotation = SegmentAnnotation(
+            meeting_id=meeting_id,
+            segment_id=payload.segment_id,
+            annotation_type=payload.annotation_type,
+            content=payload.content,
+        )
+        self.db.add(annotation)
+        self.db.commit()
+        self.db.refresh(annotation)
+        return annotation
+
+    def delete_annotation(self, annotation_id: int) -> bool:
+        annotation = self.db.query(SegmentAnnotation).filter(SegmentAnnotation.id == annotation_id).first()
+        if not annotation:
+            return False
+        self.db.delete(annotation)
+        self.db.commit()
+        return True

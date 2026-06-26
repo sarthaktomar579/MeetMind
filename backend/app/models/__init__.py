@@ -1,4 +1,5 @@
 from app.models.action_item import ActionItem
+from app.models.annotation import SegmentAnnotation
 from app.models.meeting import Meeting, meeting_participants, meeting_tags
 from app.models.participant import Participant
 from app.models.tag import Tag, Topic
@@ -8,6 +9,7 @@ __all__ = [
     "ActionItem",
     "Meeting",
     "Participant",
+    "SegmentAnnotation",
     "Tag",
     "Topic",
     "TranscriptSegment",

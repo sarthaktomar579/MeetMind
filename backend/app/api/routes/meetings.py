@@ -7,14 +7,19 @@ from app.schemas.meeting import (
     ActionItemCreate,
     ActionItemRead,
     ActionItemUpdate,
+    AskQuestionRequest,
+    AskQuestionResponse,
     GlobalSearchResult,
     MeetingCreate,
     MeetingDetail,
     MeetingListItem,
     MeetingUpdate,
+    SegmentAnnotationCreate,
+    SegmentAnnotationRead,
     TagRead,
     TranscriptSegmentRead,
 )
+from app.services.llm_service import answer_from_transcript
 from app.services.transcript_parser import (
     estimate_duration_seconds,
     generate_mock_action_items,
@@ -37,10 +42,11 @@ def list_meetings(
     date_from: str | None = None,
     date_to: str | None = None,
     tag: str | None = None,
+    topic: str | None = None,
     sort: str = Query(default="recent", pattern="^(recent|oldest)$"),
     repo: MeetingRepository = Depends(get_repo),
 ):
-    return repo.list_meetings(search, participant, date_from, date_to, tag, sort)
+    return repo.list_meetings(search, participant, date_from, date_to, tag, topic, sort)
 
 
 @router.get("/search/global", response_model=list[GlobalSearchResult])
@@ -51,6 +57,11 @@ def global_search(q: str = Query(min_length=1), repo: MeetingRepository = Depend
 @router.get("/tags/all", response_model=list[TagRead])
 def list_tags(repo: MeetingRepository = Depends(get_repo)):
     return repo.list_tags()
+
+
+@router.get("/topics/all", response_model=list[str])
+def list_topics(repo: MeetingRepository = Depends(get_repo)):
+    return repo.list_topics()
 
 
 @router.get("/{meeting_id}", response_model=MeetingDetail)
@@ -170,3 +181,32 @@ def update_action_item(
 def delete_action_item(item_id: int, repo: MeetingRepository = Depends(get_repo)):
     if not repo.delete_action_item(item_id):
         raise HTTPException(status_code=404, detail="Action item not found")
+
+
+@router.post("/{meeting_id}/annotations", response_model=SegmentAnnotationRead, status_code=201)
+def create_annotation(
+    meeting_id: int, payload: SegmentAnnotationCreate, repo: MeetingRepository = Depends(get_repo)
+):
+    annotation = repo.create_annotation(meeting_id, payload)
+    if not annotation:
+        raise HTTPException(status_code=404, detail="Meeting or segment not found")
+    return annotation
+
+
+@router.delete("/annotations/{annotation_id}", status_code=204)
+def delete_annotation(annotation_id: int, repo: MeetingRepository = Depends(get_repo)):
+    if not repo.delete_annotation(annotation_id):
+        raise HTTPException(status_code=404, detail="Annotation not found")
+
+
+@router.post("/{meeting_id}/ask", response_model=AskQuestionResponse)
+def ask_about_meeting(
+    meeting_id: int, payload: AskQuestionRequest, repo: MeetingRepository = Depends(get_repo)
+):
+    meeting = repo.get_meeting(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    answer, sources, used_llm = answer_from_transcript(
+        payload.question, meeting.transcript_segments, meeting.summary
+    )
+    return AskQuestionResponse(answer=answer, source_segments=sources, used_llm=used_llm)

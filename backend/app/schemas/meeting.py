@@ -121,6 +121,23 @@ class MeetingListItem(BaseModel):
     tags: list[TagRead]
 
 
+class SegmentAnnotationBase(BaseModel):
+    annotation_type: str = Field(pattern="^(comment|highlight|soundbite)$")
+    content: str | None = None
+
+
+class SegmentAnnotationCreate(SegmentAnnotationBase):
+    segment_id: int
+
+
+class SegmentAnnotationRead(SegmentAnnotationBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    meeting_id: int
+    segment_id: int
+    created_at: datetime
+
+
 class MeetingDetail(MeetingBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -131,6 +148,17 @@ class MeetingDetail(MeetingBase):
     transcript_segments: list[TranscriptSegmentRead]
     action_items: list[ActionItemRead]
     topics: list[TopicRead]
+    annotations: list[SegmentAnnotationRead] = []
+
+
+class AskQuestionRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+
+
+class AskQuestionResponse(BaseModel):
+    answer: str
+    source_segments: list[TranscriptSegmentRead] = []
+    used_llm: bool = False
 
 
 class GlobalSearchResult(BaseModel):

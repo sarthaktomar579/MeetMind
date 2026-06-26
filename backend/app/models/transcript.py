@@ -16,6 +16,9 @@ class TranscriptSegment(Base):
     segment_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     meeting: Mapped["Meeting"] = relationship(back_populates="transcript_segments")
+    annotations: Mapped[list["SegmentAnnotation"]] = relationship(
+        back_populates="segment", cascade="all, delete-orphan"
+    )
 
 
 from app.models.meeting import Meeting  # noqa: E402

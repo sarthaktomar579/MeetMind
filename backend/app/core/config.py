@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     app_name: str = "MeetMind API"
     database_url: str = "sqlite:///./meetmind.db"
     cors_origins: str = "http://localhost:3000"
+    gemini_api_key: str | None = None
 
     @property
     def cors_origin_list(self) -> list[str]:

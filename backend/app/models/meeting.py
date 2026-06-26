@@ -48,3 +48,6 @@ class Meeting(Base):
     topics: Mapped[list["Topic"]] = relationship(
         back_populates="meeting", cascade="all, delete-orphan", order_by="Topic.start_ms"
     )
+    annotations: Mapped[list["SegmentAnnotation"]] = relationship(
+        back_populates="meeting", cascade="all, delete-orphan", order_by="SegmentAnnotation.id"
+    )

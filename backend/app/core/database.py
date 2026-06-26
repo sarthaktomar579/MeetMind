@@ -26,6 +26,7 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     from app.models import (  # noqa: F401
         action_item,
+        annotation,
         meeting,
         participant,
         tag,
