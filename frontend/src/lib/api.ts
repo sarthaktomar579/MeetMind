@@ -1,5 +1,6 @@
 import {
   ActionItem,
+  AskQuestionResponse,
   GlobalSearchResult,
   MeetingCreatePayload,
   MeetingDetail,
@@ -95,4 +96,10 @@ export const api = {
       body: form,
     });
   },
+
+  askQuestion: (meetingId: number, question: string) =>
+    request<AskQuestionResponse>(`/api/meetings/${meetingId}/ask`, {
+      method: "POST",
+      body: JSON.stringify({ question }),
+    }),
 };

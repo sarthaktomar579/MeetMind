@@ -66,6 +66,12 @@ export interface GlobalSearchResult {
   start_ms?: number | null;
 }
 
+export interface AskQuestionResponse {
+  answer: string;
+  source_segments: TranscriptSegment[];
+  used_llm: boolean;
+}
+
 export interface MeetingCreatePayload {
   title: string;
   description?: string;
