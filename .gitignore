@@ -6,7 +6,6 @@ __pycache__/
 venv/
 env/
 *.db
-.env
 backend/meetmind.db
 
 # Node
@@ -18,10 +17,13 @@ dist/
 
 # IDE & OS
 .idea/
-.vscode/
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
 npm-debug.log*
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+config.bat
